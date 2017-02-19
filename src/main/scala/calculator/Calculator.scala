@@ -44,23 +44,22 @@ object Calculator {
   }
 
   private def isCyclicDependency(name: String, expr: Expr, references: Map[String, Signal[Expr]]): Boolean = {
+    def isReferencingName(name: String, expr: Expr): Boolean = {
+      expr match {
+        case Ref(n) => n == name || isReferencingName(name, getReferenceExpr(n, references))
+        case Plus(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
+        case Minus(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
+        case Times(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
+        case Divide(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
+        case _ => false
+      }
+    }
     expr match {
       case Ref(n) => isReferencingName(name, getReferenceExpr(n, references))
       case Plus(e1, e2) => isCyclicDependency(name, e1, references) || isCyclicDependency(name, e2, references)
       case Minus(e1, e2) => isCyclicDependency(name, e1, references) || isCyclicDependency(name, e2, references)
       case Times(e1, e2) => isCyclicDependency(name, e1, references) || isCyclicDependency(name, e2, references)
       case Divide(e1, e2) => isCyclicDependency(name, e1, references) || isCyclicDependency(name, e2, references)
-      case _ => false
-    }
-  }
-
-  private def isReferencingName(name: String, expr: Expr): Boolean = {
-    expr match {
-      case Ref(n) => n == name
-      case Plus(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
-      case Minus(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
-      case Times(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
-      case Divide(e1, e2) => isReferencingName(name, e1) || isReferencingName(name, e2)
       case _ => false
     }
   }
